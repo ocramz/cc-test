@@ -20,6 +20,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Lib
   build-depends:       base >= 4.7 && < 5
+                     , case-insensitive
                      , containers
                        -- DEBUG
                      , hedgehog
@@ -31,6 +32,7 @@ test-suite spec
   hs-source-dirs:      test
   main-is:             LibSpec.hs
   build-depends:       base
+                     , case-insensitive
                      , cc-test
                      , hedgehog
                      -- , hspec

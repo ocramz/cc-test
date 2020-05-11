@@ -3,6 +3,8 @@ module Main where
 
 import Control.Monad (void)
 
+import qualified Data.CaseInsensitive as CI (mk)
+
 import           Hedgehog
 import qualified Hedgehog.Gen as Gen
 import qualified Hedgehog.Range as Range
@@ -34,6 +36,10 @@ prop_reverse =
     xs <- forAll $ Gen.list (Range.linear 0 100) Gen.alpha
     reverse (reverse xs) === xs
 
+prop_noBepaCI :: Int -> Property
+prop_noBepaCI n = property $ do
+  (NodeName x) <- forAll $ genNodeName n
+  CI.mk x /== CI.mk "bepa"
 
 
 
@@ -52,7 +58,6 @@ genTree n = Gen.recursive Gen.choice nrg rg
 tyA :: Int -> [Tree] -> Gen Tree
 tyA n x = Tree_TypeA <$> genNodeInfo n <*> genString n <*> pure x
 
-
 genTypeB :: Int -> Gen TypeB
 genTypeB n = Gen.recursive Gen.choice nrg rg
   where
@@ -69,11 +74,12 @@ genNodeInfo :: Int -> Gen NodeInfo
 genNodeInfo n = NodeInfo <$> genCost <*> genNodeName n
 
 genCost :: Gen Cost
-genCost = Cost <$> pure 0 -- <$> Gen.float (Range.constantFrom 0 0 10.0)
+genCost = Cost <$> pure 0 -- TBD
 
 -- | names are nonempty strings of length smaller than n
 genNodeName :: Int -> Gen NodeName
 genNodeName n = NodeName <$> genString n
 
-genString :: Int -> Gen String 
-genString n = Gen.string (Range.linear 1 n) Gen.alpha
+genString :: Int -> Gen String
+genString _ = Gen.string (Range.singleton 4) Gen.alpha
+-- genString n = Gen.string (Range.linear 1 n) Gen.alpha
