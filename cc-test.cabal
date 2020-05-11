@@ -20,25 +20,21 @@ library
   hs-source-dirs:      src
   exposed-modules:     Lib
   build-depends:       base >= 4.7 && < 5
-
-executable cc-test
-  default-language:    Haskell2010
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  hs-source-dirs:      app
-  main-is:             Main.hs
-  build-depends:       base
-                     , cc-test
+                     , containers
+                       -- DEBUG
+                     , hedgehog
 
 test-suite spec
   default-language:    Haskell2010
   ghc-options:         -Wall
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
-  main-is:             Spec.hs
+  main-is:             LibSpec.hs
   build-depends:       base
                      , cc-test
-                     , hspec
-                     , QuickCheck
+                     , hedgehog
+                     -- , hspec
+                     -- , QuickCheck
 
 source-repository head
   type:     git
