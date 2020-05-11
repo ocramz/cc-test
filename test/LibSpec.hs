@@ -2,6 +2,7 @@
 module Main where
 
 import Control.Monad (void)
+import Data.List (any)
 
 import qualified Data.CaseInsensitive as CI (mk)
 
@@ -26,60 +27,67 @@ Implement "property-based tests" to the function getCommonNodeNamesExceptBepa
 
 tests :: IO Bool
 tests =
-  checkParallel $ Group "Test.Example" [
-      ("prop_reverse", prop_reverse)
+  checkParallel $ Group "Lib" [
+      ("prop_noBepaCI", withTests 1000000 $ prop_noBepaCI),
+      ("prop_noBepaNodesCI", withTests 10000000 $ prop_noBepaNodesCI)
     ]
 
-prop_reverse :: Property
-prop_reverse =
-  property $ do
-    xs <- forAll $ Gen.list (Range.linear 0 100) Gen.alpha
-    reverse (reverse xs) === xs
 
-prop_noBepaCI :: Int -> Property
-prop_noBepaCI n = property $ do
-  (NodeName x) <- forAll $ genNodeName n
+prop_noBepaNodesCI :: Property
+prop_noBepaNodesCI = property $ do
+  t1 <- forAll genTree
+  t2 <- forAll genTree
+  let nns = (\(NodeName x) -> CI.mk x) `map` getCommonNodeNamesExceptBepa t1 t2
+  assert (none (== CI.mk "bepa") nns)
+
+none :: Foldable t => (a -> Bool) -> t a -> Bool
+none q = not . any q
+
+prop_noBepaCI :: Property
+prop_noBepaCI = property $ do
+  (NodeName x) <- forAll genNodeName
   CI.mk x /== CI.mk "bepa"
 
 
 
 -- * Tree generators
 
-genTree :: Int -- ^ maximum length of name strings
-        -> Gen Tree
-genTree n = Gen.recursive Gen.choice nrg rg
+genTree :: Gen Tree
+genTree = Gen.recursive Gen.choice nrg rg
   where
-    nrg = [tyA n [], Tree_TypeB <$> tyB n []]
+    nrg = [
+      tyA [],
+      Tree_TypeB <$> tyB []
+      ]
     rg = [
-      Gen.subtermM (genTree n) (\x -> tyA n [x]) ,
-      Tree_TypeB <$> Gen.subtermM (genTypeB n) (\x -> tyB n [x])
+      Gen.subtermM genTree (\x -> tyA [x]) ,
+      Tree_TypeB <$> Gen.subtermM genTypeB (\x -> tyB [x])
       ]
 
-tyA :: Int -> [Tree] -> Gen Tree
-tyA n x = Tree_TypeA <$> genNodeInfo n <*> genString n <*> pure x
+tyA :: [Tree] -> Gen Tree
+tyA x = Tree_TypeA <$> genNodeInfo <*> genString <*> pure x
 
-genTypeB :: Int -> Gen TypeB
-genTypeB n = Gen.recursive Gen.choice nrg rg
+genTypeB :: Gen TypeB
+genTypeB = Gen.recursive Gen.choice nrg rg
   where
-    nrg = [tyB n []]
-    rg = [Gen.subtermM (genTypeB n) (\x -> tyB n [x]) ]
+    nrg = [tyB []]
+    rg = [Gen.subtermM genTypeB (\x -> tyB [x]) ]
 
-tyB :: Int -> [TypeB] -> Gen TypeB
-tyB n x = TypeB <$> genCost <*> genNodeName n <*> pure x
+tyB :: [TypeB] -> Gen TypeB
+tyB x = TypeB <$> genCost <*> genNodeName <*> pure x
 
 
 -- * Basic generators
 
-genNodeInfo :: Int -> Gen NodeInfo
-genNodeInfo n = NodeInfo <$> genCost <*> genNodeName n
+genNodeInfo :: Gen NodeInfo
+genNodeInfo = NodeInfo <$> genCost <*> genNodeName
 
 genCost :: Gen Cost
 genCost = Cost <$> pure 0 -- TBD
 
--- | names are nonempty strings of length smaller than n
-genNodeName :: Int -> Gen NodeName
-genNodeName n = NodeName <$> genString n
+genNodeName :: Gen NodeName
+genNodeName = NodeName <$> genString
 
-genString :: Int -> Gen String
-genString _ = Gen.string (Range.singleton 4) Gen.alpha
--- genString n = Gen.string (Range.linear 1 n) Gen.alpha
+genString :: Gen String
+genString = Gen.string (Range.singleton 4) Gen.alpha
+-- genString = Gen.string (Range.linear 1 n) Gen.alpha

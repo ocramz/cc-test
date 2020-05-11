@@ -2,9 +2,7 @@
 {-# language GeneralizedNewtypeDeriving #-}
 {-# language OverloadedStrings #-}
 module Lib where
-
 import Data.String (IsString(..))
-
 import qualified Data.Set as S (fromList, intersection, toList)
 
 data Tree = Tree_TypeA NodeInfo String [Tree]
