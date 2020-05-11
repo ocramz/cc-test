@@ -29,9 +29,9 @@ tests :: IO Bool
 tests =
   checkParallel $ Group "Lib" [
       ("prop_noBepaCI",
-       withDiscards 10000000 $ withTests 100000 $ prop_noBepaCI),
+       withDiscards 100000 $ withTests 100000 $ prop_noBepaCI),
       ("prop_noBepaNodesCI",
-       withDiscards 10000 $ withTests 1000 $ prop_noBepaNodesCI)
+       withDiscards 100 $ withTests 10 $ prop_noBepaNodesCI)
     ]
 
 
@@ -56,10 +56,12 @@ prop_noBepaCI = property $ do
 genTree :: Gen Tree
 genTree = Gen.recursive Gen.choice nrg rg
   where
+    -- non-recursive generators
     nrg = [
       tyA [],
       Tree_TypeB <$> tyB []
       ]
+    -- recursive generators
     rg = [
       Gen.subtermM genTree (\x -> tyA [x]) ,
       Tree_TypeB <$> Gen.subtermM genTypeB (\x -> tyB [x])
