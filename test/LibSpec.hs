@@ -29,7 +29,7 @@ tests :: IO Bool
 tests =
   checkParallel $ Group "Lib" [
       -- ("prop_noBepaCI", withTests 1000 $ prop_noBepaCI),
-      ("prop_noBepaNodesCI", withDiscards 10000000 $ withTests 1000 $ prop_noBepaNodesCI)
+      ("prop_noBepaNodesCI", withDiscards 100000 $ withTests 1000 $ prop_noBepaNodesCI)
     ]
 
 
@@ -88,6 +88,7 @@ genCost = Cost <$> pure 0 -- TBD
 genNodeName :: Gen NodeName
 genNodeName = NodeName <$> genString
 
+-- | very restricted name generator
 genString :: Gen String
 genString = do
   let f (a:b:_) = a == 'b' && b == 'e'
