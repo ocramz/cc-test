@@ -28,8 +28,10 @@ Implement "property-based tests" to the function getCommonNodeNamesExceptBepa
 tests :: IO Bool
 tests =
   checkParallel $ Group "Lib" [
-      -- ("prop_noBepaCI", withTests 1000 $ prop_noBepaCI),
-      ("prop_noBepaNodesCI", withDiscards 100000 $ withTests 1000 $ prop_noBepaNodesCI)
+      ("prop_noBepaCI",
+       withDiscards 10000000 $ withTests 100000 $ prop_noBepaCI),
+      ("prop_noBepaNodesCI",
+       withDiscards 10000 $ withTests 1000 $ prop_noBepaNodesCI)
     ]
 
 
@@ -50,8 +52,7 @@ prop_noBepaCI = property $ do
 
 
 
--- * Tree generators
-
+-- | Tree generator
 genTree :: Gen Tree
 genTree = Gen.recursive Gen.choice nrg rg
   where
@@ -79,19 +80,23 @@ tyB x = TypeB <$> genCost <*> genNodeName <*> pure x
 
 -- * Basic generators
 
+-- | Generate a 'NodeInfo'
 genNodeInfo :: Gen NodeInfo
 genNodeInfo = NodeInfo <$> genCost <*> genNodeName
 
+-- | Generate a 'Cost'
 genCost :: Gen Cost
 genCost = Cost <$> pure 0 -- TBD
 
+-- | Generate a 'NodeName'
 genNodeName :: Gen NodeName
 genNodeName = NodeName <$> genString
 
--- | very restricted name generator
+-- | Generate a _very_ restricted string value
 genString :: Gen String
 genString = do
   let f (a:b:_) = a == 'b' && b == 'e'
+      f _ = False
   Gen.filter f $ Gen.string (Range.singleton 4) Gen.alpha
 
 -- genString = Gen.string (Range.linear 1 n) Gen.alpha
